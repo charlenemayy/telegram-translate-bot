@@ -1,5 +1,7 @@
 from telegram.ext import Updater
 from telegram.ext import CommandHandler
+from telegram import InlineQueryResultArticle, InputTextMessageContent
+from telegram.ext import InlineQueryHandler
 import logging
 
 logging.basicConfig(format='%(asctime)s - %(name)s - '
@@ -20,6 +22,26 @@ def translate(bot, update, args):
 
 translate_handler = CommandHandler('caps', translate, pass_args=True)
 dispatcher.add_handler(translate_handler)
+
+
+# inline handler
+def inline_translate(bot, update):
+    query = update.inline_query.query #text of the query
+    if not query:
+        return
+    results = list()
+    results.append(
+        InlineQueryResultArticle(
+            id=query.upper(), #converts to uppercase; later pass variable
+            title='Translate',
+            input_message_content=InputTextMessageContent(query.upper())
+        )
+    )
+    bot.answer_inline_query(update.inline_query.id, results) #shows the results above text entry
+
+
+inline_translate_handler = InlineQueryHandler(inline_translate)
+dispatcher.add_handler(inline_translate_handler)
 
 # poll updates from Telegram
 updater.start_polling()
