@@ -1,7 +1,7 @@
 from telegram.ext import Updater
-from telegram.ext import CommandHandler
 from telegram import InlineQueryResultArticle, InputTextMessageContent
 from telegram.ext import InlineQueryHandler
+from googletrans import Translator
 import logging
 
 logging.basicConfig(format='%(asctime)s - %(name)s - '
@@ -11,33 +11,38 @@ logging.basicConfig(format='%(asctime)s - %(name)s - '
 updater = Updater(token='649269167:AAHkrWbTcMYRlbg9mqCwB6x--uavzL_S2TU')
 dispatcher = updater.dispatcher
 
-
-# write message on command 'translate'
-def translate(bot, update, args):
-    # change to send to google translate api
-    text_caps = ' '.join(args).upper()
-    bot.send_message(chat_id=update.message.chat_id,
-                     text=text_caps)
-
-
-translate_handler = CommandHandler('caps', translate, pass_args=True)
-dispatcher.add_handler(translate_handler)
+# initalize translate api
+translator = Translator()
 
 
 # inline handler
+# eventually make dynamic instead
+# of having to write new translate line per language
 def inline_translate(bot, update):
-    query = update.inline_query.query #text of the query
+    query = update.inline_query.query  # text of the query
     if not query:
         return
     results = list()
+    # russian
+    ru_text = translator.translate(query, dest='ru').text
     results.append(
         InlineQueryResultArticle(
-            id=query.upper(), #converts to uppercase; later pass variable
-            title='Translate',
-            input_message_content=InputTextMessageContent(query.upper())
+            id=ru_text,
+            title='Russian',
+            input_message_content=InputTextMessageContent(ru_text)
         )
     )
-    bot.answer_inline_query(update.inline_query.id, results) #shows the results above text entry
+    # english
+    en_text = translator.translate(query, dest='en').text
+    results.append(
+        InlineQueryResultArticle(
+            id=en_text,
+            title='English',
+            input_message_content=InputTextMessageContent(en_text)
+        )
+    )
+    # shows the results above text entry
+    bot.answer_inline_query(update.inline_query.id, results)
 
 
 inline_translate_handler = InlineQueryHandler(inline_translate)
